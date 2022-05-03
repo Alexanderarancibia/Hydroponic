@@ -1,0 +1,2 @@
+pytz
+Adafruit-ADS1x15
