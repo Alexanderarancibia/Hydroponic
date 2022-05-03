@@ -44,7 +44,7 @@ GPIO.setup(ElevadorPH,GPIO.OUT)
 GPIO.setup(SensorNivel,GPIO.IN)
 GPIO.setup(Nivelbajo,GPIO.IN)
 GPIO.setup(BombaAgua,GPIO.OUT)
-f = open('/home/pi/Documents/Hydroponic_Code/parametros.json')
+f = open('/home/pi/Documents/Hydroponic/parametros.json')
 parameter = json.load(f)
 
 def setup():
@@ -207,8 +207,6 @@ def nivel_bajo():
 def control_bombas(PH,EC,numero_semanas):
     #if numero_semanas < 0.5:
     #    break
-    f = open('/home/pi/Documents/Hydroponic_Code/parametros.json')
-    parameter = json.load(f)
     print(numero_semanas)
     if numero_semanas<1:
         EC_min = parameter["Parametros_EC"][0]["Semana1_EC"][0]
@@ -284,7 +282,7 @@ def control_bombas(PH,EC,numero_semanas):
     else:
         GPIO.output(ReductorPH, GPIO.HIGH)
         GPIO.output(ElevadorPH, GPIO.HIGH)
-    time.sleep(10)
+    time.sleep(600)
     return VolumenAgua
 
 def send_data(data):

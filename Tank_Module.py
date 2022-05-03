@@ -28,7 +28,8 @@ def main():
     device_list = hy.get_devices()    #Lista de los Dispositivos Atlas I2C conectados
     T1,T2 = hy.read_temp()   #Lectura de la Temperatura
     PH, EC = hy.PH_EC(device_list,T1)    #Lectura del PH y EC 
-    VolumenAgua = hy.nivel_bajo()   # Control del nivel Bajo de Agua
+    #VolumenAgua = hy.nivel_bajo()   # Control del nivel Bajo de Agua
+    VolumenAgua = 0
     data = [
         {
         "PH" :PH,
@@ -71,7 +72,7 @@ def main():
             hy.send_data(data)
 
             print("mensaje enviado: ", data)
-            time.sleep(10)
+            time.sleep(600)
             hy.reset()
             
 
