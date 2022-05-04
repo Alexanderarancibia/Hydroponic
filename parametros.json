@@ -21,8 +21,8 @@
 
 	"Parametros_PH":
 		{ 	"Rango_PH": [5.6,6.3],
-			"BombaElevador": 3,
-			"BombaReductor": 3
+			"BombaElevador": 3.2,
+			"BombaReductor": 3.2
 
 		},
 
