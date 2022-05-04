@@ -190,20 +190,29 @@ def dias_semanas(now1,inicio):
     numero_dias= (30*(now1.month-inicio.month)+now1.day-inicio.day)
     numero_semanas = numero_dias/7
     return numero_dias, numero_semanas
+
 def modulo():
     return parameter["Modulo"]
 def nivel_bajo():
     if GPIO.input(Nivelbajo):
-        print("NIVEL DE AGUA BAJO!!!") 
-        GPIO.output(BombaAgua, GPIO.LOW)
-        GPIO.output(ValvulaAgua, GPIO.LOW)
-        time.sleep(8*60)
-             
+	VolumenAgua = 0
+	for i in range(8):
+	    if GPIO.input(SensorNivel) == True:
+	        print("NIVEL DE AGUA BAJO!!!") 
+	        GPIO.output(BombaAgua, GPIO.LOW)
+	        GPIO.output(ValvulaAgua, GPIO.LOW)
+		VolumenAgua = VolumenAgua + 1000
+                time.sleep(60)
+            else:
+		GPIO.output(BombaAgua, GPIO.HIGH)
+	        GPIO.output(ValvulaAgua, GPIO.HIGH)
+		
         GPIO.output(BombaAgua, GPIO.HIGH)
         GPIO.output(ValvulaAgua, GPIO.HIGH)
-        time.sleep(4*60)
-    VolumenAgua = 0
     return VolumenAgua
+def func(x):
+    return (2*x/pow((1+4*pow(x,2)),0.5))
+
 def control_bombas(PH,EC,numero_semanas):
     #if numero_semanas < 0.5:
     #    break
@@ -238,22 +247,24 @@ def control_bombas(PH,EC,numero_semanas):
     else:
         print("Nivel Normal de agua")
         if float(EC) >EC_max:
+	    x = float(EC) - EC_max
             print("Bomba de Agua activada")
             GPIO.output(BombaAgua, GPIO.LOW)
             GPIO.output(ValvulaAgua, GPIO.LOW)
-            time.sleep(parameter["Parametros_EC"][1]["BombaAgua"])
+            time.sleep(parameter["Parametros_EC"][1]["BombaAgua"]*func(x))
             GPIO.output(BombaAgua, GPIO.HIGH)
             GPIO.output(ValvulaAgua, GPIO.HIGH)
             print("Bomba de Agua desactivada")
-            Status = "Reduccion de EC "
+            Status = "Reduccion de EC"
             VolumenAgua = parameter["Parametros_EC"][1]["VolumenAgua"]*parameter["Parametros_EC"][1]["BombaAgua"]
         elif float(EC) <EC_min:
+	    x = EC_min - float(EC) 
             GPIO.output(Nutriente1, GPIO.LOW)
             print("Bomba de Nutriente1 activada")
             time.sleep(parameter["Parametros_EC"][1]["BombaNutriente1"]-parameter["Parametros_EC"][1]["BombaNutriente2"])
             GPIO.output(Nutriente2, GPIO.LOW)
             print("Bomba de Nutriente2 activada")
-            time.sleep(parameter["Parametros_EC"][1]["BombaNutriente2"])
+            time.sleep(parameter["Parametros_EC"][1]["BombaNutriente2"]*func(x))
             GPIO.output(Nutriente1, GPIO.HIGH)
             GPIO.output(Nutriente2, GPIO.HIGH)
             print("Bombas de Nutrientes desactivada")
@@ -266,16 +277,18 @@ def control_bombas(PH,EC,numero_semanas):
             GPIO.output(ValvulaAgua, GPIO.HIGH)    
     
     if float(PH) >parameter["Parametros_PH"]["Rango_PH"][1]:
+	x = float(PH) - parameter["Parametros_PH"]["Rango_PH"][1]
         GPIO.output(ReductorPH, GPIO.LOW)
         print("Bomba Reductora activada")
-        time.sleep(parameter["Parametros_PH"]["BombaReductor"])
+        time.sleep(parameter["Parametros_PH"]["BombaReductor"]*func(x))
         GPIO.output(ReductorPH, GPIO.HIGH)
         print("Bomba Reductora desactivada")
         Status = Status+"Reduccion de PH"
     elif float(PH) < parameter["Parametros_PH"]["Rango_PH"][0]:
+	x = parameter["Parametros_PH"]["Rango_PH"][1] - float(PH)
         GPIO.output(ElevadorPH, GPIO.LOW)
         print("Bomba Elevadora de PH activada")
-        time.sleep(parameter["Parametros_PH"]["BombaElevador"])
+        time.sleep(parameter["Parametros_PH"]["BombaElevador"]*func(x)))
         GPIO.output(ElevadorPH, GPIO.HIGH)
         print("Bomba Elevadora de PH desactivada")
         Status = Status+"Aumento de PH"
