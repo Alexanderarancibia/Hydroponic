@@ -21,16 +21,16 @@
 
 	"Parametros_PH":
 		{ 	"Rango_PH": [5.6,6.3],
-			"BombaElevador": 3,
-			"BombaReductor": 3
+			"BombaElevador": 3.2,
+			"BombaReductor": 3.2
 
 		},
 
 	"FechaInicio":
 		{
-			"Año": 2021,
-			"Mes": 10,
-			"Dia": 4
+			"Año": 2022,
+			"Mes": 5,
+			"Dia": 1
 		}
 
 }
