@@ -168,15 +168,23 @@ def read(user_cmd,device,device_list):
             print("Query failed \n - Address may be invalid, use list command to see available addresses")
     return READ
 def PH_EC(device_list,T=25):
+    errorPH = False
+    errorEC = False
     if len(device_list) == 0:
         PH , EC = 7,16000
     else:
         device = device_list[0]
         #PH, EC,CO2 =read("ALL:RT,"+str(T),device,device_list)
-        PH =read("99:RT,"+str(T),device,device_list)
-        EC =read("100:RT,"+str(T),device,device_list)
+	try: 
+            PH =read("99:RT,"+str(T),device,device_list)
+	except:
+	    errorPH = True
+	try:
+            EC =read("100:RT,"+str(T),device,device_list)
+	except:
+	    errorEC = True
        
-    return float(PH), float(EC)/10
+    return float(PH), float(EC)/10, errorPH, errorEC
 
 def tiempo():
     #año mes dia
@@ -213,7 +221,7 @@ def nivel_bajo():
 def func(x):
     return (2*x/pow((1+4*pow(x,2)),0.5))
 
-def control_bombas(PH,EC,numero_semanas):
+def control_bombas(PH,EC,numero_semanas,errorPH,errorEC):
     #if numero_semanas < 0.5:
     #    break
     print(numero_semanas)
@@ -246,7 +254,7 @@ def control_bombas(PH,EC,numero_semanas):
         print("Nivel elevado de agua")
     else:
         print("Nivel Normal de agua")
-        if float(EC) >EC_max:
+        if float(EC) >EC_max and errorEC == False :
 	    x = float(EC) - EC_max
             print("Bomba de Agua activada")
             GPIO.output(BombaAgua, GPIO.LOW)
@@ -257,7 +265,7 @@ def control_bombas(PH,EC,numero_semanas):
             print("Bomba de Agua desactivada")
             Status = "Reduccion de EC"
             VolumenAgua = parameter["Parametros_EC"][1]["VolumenAgua"]*parameter["Parametros_EC"][1]["BombaAgua"]
-        elif float(EC) <EC_min:
+        elif float(EC) <EC_min and errorEC == False :
 	    x = EC_min - float(EC) 
             GPIO.output(Nutriente1, GPIO.LOW)
             print("Bomba de Nutriente1 activada")
@@ -276,7 +284,7 @@ def control_bombas(PH,EC,numero_semanas):
             GPIO.output(BombaAgua, GPIO.HIGH)
             GPIO.output(ValvulaAgua, GPIO.HIGH)    
     
-    if float(PH) >parameter["Parametros_PH"]["Rango_PH"][1]:
+    if float(PH) >parameter["Parametros_PH"]["Rango_PH"][1] and errorPH == False:
 	x = float(PH) - parameter["Parametros_PH"]["Rango_PH"][1]
         GPIO.output(ReductorPH, GPIO.LOW)
         print("Bomba Reductora activada")
@@ -284,7 +292,7 @@ def control_bombas(PH,EC,numero_semanas):
         GPIO.output(ReductorPH, GPIO.HIGH)
         print("Bomba Reductora desactivada")
         Status = Status+"Reduccion de PH"
-    elif float(PH) < parameter["Parametros_PH"]["Rango_PH"][0]:
+    elif float(PH) < parameter["Parametros_PH"]["Rango_PH"][0] and errorPH == False:
 	x = parameter["Parametros_PH"]["Rango_PH"][1] - float(PH)
         GPIO.output(ElevadorPH, GPIO.LOW)
         print("Bomba Elevadora de PH activada")
