@@ -177,12 +177,16 @@ def PH_EC(device_list,T=25):
         #PH, EC,CO2 =read("ALL:RT,"+str(T),device,device_list)
     try: 
         PH =read("99:RT,"+str(T),device,device_list)
+        
     except:
         errorPH = True
+        PH = 7
     try:
         EC =read("100:RT,"+str(T),device,device_list)
+        
     except:
         errorEC = True
+        EC = 16000
        
     return float(PH), float(EC)/10, errorPH, errorEC
 
@@ -202,8 +206,8 @@ def dias_semanas(now1,inicio):
 def modulo():
     return parameter["Modulo"]
 def nivel_bajo():
-    if GPIO.input(Nivelbajo):
-        VolumenAgua = 0
+    VolumenAgua = 0
+    if GPIO.input(Nivelbajo):  
         for i in range(8):
             if GPIO.input(SensorNivel) == True:
                 print("NIVEL DE AGUA BAJO!!!") 
@@ -217,6 +221,7 @@ def nivel_bajo():
 		
         GPIO.output(BombaAgua, GPIO.HIGH)
         GPIO.output(ValvulaAgua, GPIO.HIGH)
+    
     return VolumenAgua
 def func(x):
     return (2*x/pow((1+4*pow(x,2)),0.5))
