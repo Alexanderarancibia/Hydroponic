@@ -269,7 +269,7 @@ def control_bombas(PH,EC,numero_semanas,errorPH,errorEC):
             GPIO.output(ValvulaAgua, GPIO.HIGH)
             print("Bomba de Agua desactivada")
             Status = "Reduccion de EC"
-            VolumenAgua = parameter["Parametros_EC"][1]["VolumenAgua"]*parameter["Parametros_EC"][1]["BombaAgua"]
+            VolumenAgua = parameter["Parametros_EC"][1]["VolumenAgua"]*func(x)*parameter["Parametros_EC"][1]["BombaAgua"]
         elif float(EC) <EC_min and errorEC == False :
             x = EC_min - float(EC) 
             GPIO.output(Nutriente1, GPIO.LOW)

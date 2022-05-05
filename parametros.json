@@ -14,7 +14,8 @@
 			{ 
 				"BombaNutriente1": 33,
 				"BombaNutriente2": 18,
-				"BombaAgua": 30
+				"BombaAgua": 30,
+				"VolumenAgua": 90
 			}
 
 		],
