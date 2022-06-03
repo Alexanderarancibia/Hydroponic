@@ -27,9 +27,10 @@ def main():
     modulo = hy.modulo()
     device_list = hy.get_devices()    #Lista de los Dispositivos Atlas I2C conectados
     T1,T2 = hy.read_temp()   #Lectura de la Temperatura
-    PH, EC, errorPH,errorEC = hy.PH_EC(device_list,T1)    #Lectura del PH y EC 
-    #VolumenAgua = hy.nivel_bajo()   # Control del nivel Bajo de Agua
-    VolumenAgua = 1
+    reporte = ""
+    PH, EC, errorPH,errorEC,reporte = hy.PH_EC(device_list,reporte,T1)    #Lectura del PH y EC
+    VolumenAgua, reporte= hy.nivel_bajo(reporte)   # Control del nivel Bajo de Agua
+
     data = [
         {
         "PH" :PH,
@@ -39,6 +40,7 @@ def main():
         "DiasTranscurridos" :numero_dias,
         "Modulo" :modulo ,
         "VolumenAgua": VolumenAgua,
+        "Reporte": reporte[2:]
 
         }
         ]
@@ -53,9 +55,10 @@ def main():
             now1,now = hy.tiempo()
             numero_dias, numero_semanas = hy.dias_semanas(now1,inicio)
             #Lectura de Datos del tanque
-            VolumenAgua = hy.control_bombas(PH,EC,numero_semanas,errorPH,errorEC)
+            reporte= ""
+            PH, EC, errorPH,errorEC,reporte = hy.PH_EC(device_list,reporte,T1)
+            VolumenAgua,reporte = hy.control_bombas(PH,EC,numero_semanas,errorPH,errorEC,reporte)
             T1,T2= hy.read_temp()
-            PH, EC, errorPH,errorEC = hy.PH_EC(device_list,T1)
 
             data = [
                 {
@@ -65,8 +68,8 @@ def main():
                 "Timestamp" :now,
                 "DiasTranscurridos" :numero_dias,
                 "Modulo" :modulo,
-                "VolumenAgua":VolumenAgua
-
+                "VolumenAgua":VolumenAgua,
+                "Reporte": reporte[2:]
                 }
                 ]
             hy.send_data(data)
@@ -86,4 +89,3 @@ def main():
                     
 if __name__ == '__main__':
     main()
-
