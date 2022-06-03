@@ -1,0 +1,14 @@
+[Unit]
+Description=Start Clock
+
+[Service]
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/pi/.Xauthority
+ExecStart=sudo python3 /home/pi/Documents/Hydroponic_Code/CO2.py > /home/pi/co2.log 2>&1'
+Restart=always
+RestartSec=10s
+KillMode=process
+TimeoutSec=infinity
+
+[Install]
+WantedBy=graphical.target
