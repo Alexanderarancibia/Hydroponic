@@ -167,9 +167,10 @@ def read(user_cmd,device,device_list):
         except IOError:
             print("Query failed \n - Address may be invalid, use list command to see available addresses")
     return READ
-def PH_EC(device_list,T=25):
+def PH_EC(device_list,reporte ,T=25):
     errorPH = False
     errorEC = False
+    
     if len(device_list) == 0:
         PH , EC = 7,16000
     else:
@@ -180,6 +181,7 @@ def PH_EC(device_list,T=25):
         
     except:
         errorPH = True
+        reporte += ", Fallo Sensor PH"
         PH = 7
     try:
         EC =read("100:RT,"+str(T),device,device_list)
@@ -187,8 +189,9 @@ def PH_EC(device_list,T=25):
     except:
         errorEC = True
         EC = 16000
+        reporte += ", Fallo Sensor EC"
        
-    return float(PH), float(EC)/10, errorPH, errorEC
+    return float(PH), float(EC)/10, errorPH, errorEC,reporte 
 
 def tiempo():
     #año mes dia
@@ -205,9 +208,10 @@ def dias_semanas(now1,inicio):
 
 def modulo():
     return parameter["Modulo"]
-def nivel_bajo():
+def nivel_bajo(reporte):
     VolumenAgua = 0
-    if GPIO.input(Nivelbajo):  
+    if GPIO.input(Nivelbajo):
+        reporte += ", Nivel bajo de agua"
         for i in range(8):
             if GPIO.input(SensorNivel) == True:
                 print("NIVEL DE AGUA BAJO!!!") 
@@ -216,19 +220,26 @@ def nivel_bajo():
                 VolumenAgua = VolumenAgua + 1000
                 time.sleep(60)
             else:
+                print("Nivel de agua normal") 
                 GPIO.output(BombaAgua, GPIO.HIGH)
                 GPIO.output(ValvulaAgua, GPIO.HIGH)
-		
+                reporte += " regulado"
+                break
+
         GPIO.output(BombaAgua, GPIO.HIGH)
         GPIO.output(ValvulaAgua, GPIO.HIGH)
     
-    return VolumenAgua
-def func(x):
-    return (2*x/pow((1+4*pow(x,2)),0.5))
+    return VolumenAgua,reporte
+def funcPH(x):
+    return max((2*x/pow((1+4*pow(x,2)),0.5)),0.4)
 
-def control_bombas(PH,EC,numero_semanas,errorPH,errorEC):
+def funcEC(x):
+    return max((0.006*x/pow((1+0.000036*pow(x,2)),0.5)),0.4)
+
+def control_bombas(PH,EC,numero_semanas,errorPH,errorEC,reporte):
     #if numero_semanas < 0.5:
     #    break
+    
     print(numero_semanas)
     if numero_semanas<1:
         EC_min = parameter["Parametros_EC"][0]["Semana1_EC"][0]
@@ -252,10 +263,11 @@ def control_bombas(PH,EC,numero_semanas,errorPH,errorEC):
     print("EC min : ", EC_min)
     print("EC max : ", EC_max)
      
-    Status= ""
     VolumenAgua = 0
     
     if GPIO.input(SensorNivel) == False:
+        reporte += ", Nivel elevado de Agua"
+        
         print("Nivel elevado de agua")
     else:
         print("Nivel Normal de agua")
@@ -264,24 +276,28 @@ def control_bombas(PH,EC,numero_semanas,errorPH,errorEC):
             print("Bomba de Agua activada")
             GPIO.output(BombaAgua, GPIO.LOW)
             GPIO.output(ValvulaAgua, GPIO.LOW)
-            time.sleep(parameter["Parametros_EC"][1]["BombaAgua"]*func(x))
+            tiempo = parameter["Parametros_EC"][1]["BombaAgua"]*funcEC(x)
+            time.sleep(tiempo)
+            reporte += ", Bomba de agua activada: "+str(tiempo)+" segundos"
             GPIO.output(BombaAgua, GPIO.HIGH)
             GPIO.output(ValvulaAgua, GPIO.HIGH)
             print("Bomba de Agua desactivada")
-            Status = "Reduccion de EC"
-            VolumenAgua = parameter["Parametros_EC"][1]["VolumenAgua"]*func(x)*parameter["Parametros_EC"][1]["BombaAgua"]
+            VolumenAgua = parameter["Parametros_EC"][1]["VolumenAgua"]*funcEC(x)*parameter["Parametros_EC"][1]["BombaAgua"]
         elif float(EC) <EC_min and errorEC == False :
             x = EC_min - float(EC) 
             GPIO.output(Nutriente1, GPIO.LOW)
             print("Bomba de Nutriente1 activada")
-            time.sleep(parameter["Parametros_EC"][1]["BombaNutriente1"]-parameter["Parametros_EC"][1]["BombaNutriente2"])
+            tiempo1 = parameter["Parametros_EC"][1]["BombaNutriente1"]*funcEC(x)
+            tiempo2 = parameter["Parametros_EC"][1]["BombaNutriente2"]*funcEC(x)
+            time.sleep(tiempo1- tiempo2)
             GPIO.output(Nutriente2, GPIO.LOW)
             print("Bomba de Nutriente2 activada")
-            time.sleep(parameter["Parametros_EC"][1]["BombaNutriente2"]*func(x))
+            time.sleep(tiempo2)
             GPIO.output(Nutriente1, GPIO.HIGH)
             GPIO.output(Nutriente2, GPIO.HIGH)
             print("Bombas de Nutrientes desactivada")
-            Status = "Aumento de EC "
+            reporte += ", Bomba de agua Nutriente 1 activada: "+str(tiempo1)+" segundos"
+            reporte += ", Bomba de agua Nutriente 2 activada: "+str(tiempo2)+" segundos"
                 
         else:
             GPIO.output(Nutriente1, GPIO.HIGH)
@@ -293,23 +309,26 @@ def control_bombas(PH,EC,numero_semanas,errorPH,errorEC):
         x = float(PH) - parameter["Parametros_PH"]["Rango_PH"][1]
         GPIO.output(ReductorPH, GPIO.LOW)
         print("Bomba Reductora activada")
-        time.sleep(parameter["Parametros_PH"]["BombaReductor"]*func(x))
+        tiempo = parameter["Parametros_PH"]["BombaReductor"]*funcPH(x)
+        time.sleep(tiempo)
+        reporte += ", Bomba Reductora activada: "+str(tiempo)+" segundos"
         GPIO.output(ReductorPH, GPIO.HIGH)
         print("Bomba Reductora desactivada")
-        Status = Status+"Reduccion de PH"
+   
     elif float(PH) < parameter["Parametros_PH"]["Rango_PH"][0] and errorPH == False:
         x = parameter["Parametros_PH"]["Rango_PH"][1] - float(PH)
         GPIO.output(ElevadorPH, GPIO.LOW)
         print("Bomba Elevadora de PH activada")
-        time.sleep(parameter["Parametros_PH"]["BombaElevador"]*func(x))
+        tiempo = parameter["Parametros_PH"]["BombaElevador"]*funcPH(x)
+        time.sleep(tiempo)
+        reporte += ", Bomba Elevadora activada: "+str(tiempo)+" segundos"
         GPIO.output(ElevadorPH, GPIO.HIGH)
         print("Bomba Elevadora de PH desactivada")
-        Status = Status+"Aumento de PH"
     else:
         GPIO.output(ReductorPH, GPIO.HIGH)
         GPIO.output(ElevadorPH, GPIO.HIGH)
     time.sleep(600)
-    return VolumenAgua
+    return VolumenAgua,reporte
 
 def send_data(data):
     url = "https://api.powerbi.com/beta/01c4d789-4148-49f6-8723-7f73c88d38af/datasets/0aba6e3c-fcbe-4094-9dfb-e9b7c847de8b/rows?key=unvXnB4CFgEUZx1snfOLsQClNcEfVO%2BikaW9FrATpzhNjaHm1ULnlRAkREtP9yj6tmXYfAuizrMWtYSRceM5%2Fg%3D%3D"
@@ -323,6 +342,6 @@ def send_data(data):
                 data=json.dumps(data))
     
 def reset():
-    f = open('/home/pi/Documents/Hydroponic_Code/parametros.json')
+    f = open('/home/pi/Documents/Hydroponic/parametros.json')
     parameter = json.load(f)
     f.close()
