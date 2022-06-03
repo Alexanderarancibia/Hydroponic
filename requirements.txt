@@ -1,3 +1,0 @@
-pytz
-Adafruit-ADS1x15
-pymodbus
