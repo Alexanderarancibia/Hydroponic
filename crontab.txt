@@ -1,0 +1,6 @@
+00 0 * * * /sbin/shutdown -r now
+00 4 * * * /sbin/shutdown -r now
+00 8 * * * /sbin/shutdown -r now
+00 12 * * * /sbin/shutdown -r now
+00 16 * * * /sbin/shutdown -r now
+00 20 * * * /sbin/shutdown -r now
