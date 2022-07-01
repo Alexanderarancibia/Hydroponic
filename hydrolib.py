@@ -23,17 +23,18 @@ from datetime import datetime as dt
 from datetime import timedelta as td
 
 
-
-
 Nutriente1 = 12
 Nutriente2=6
 ReductorPH= 13
 ElevadorPH=21
 ValvulaAgua = 20
-SensorNivel = 16
-Nivelbajo = 26
+Mezclador1 = 16
+Rele7 = 26
 BombaAgua = 19
 VolumenAgua = 0
+SensorNivel = 10
+Nivelbajo = 24
+
 GPIO.setmode(GPIO.BCM) 
 GPIO.setwarnings(False)
 GPIO.setup(ValvulaAgua,GPIO.OUT)
@@ -44,6 +45,8 @@ GPIO.setup(ElevadorPH,GPIO.OUT)
 GPIO.setup(SensorNivel,GPIO.IN)
 GPIO.setup(Nivelbajo,GPIO.IN)
 GPIO.setup(BombaAgua,GPIO.OUT)
+GPIO.setup(Mezclador1,GPIO.OUT)
+GPIO.setup(Rele7,GPIO.OUT)
 f = open('/home/pi/Documents/Hydroponic/parametros.json')
 parameter = json.load(f)
 
@@ -57,6 +60,8 @@ def setup():
     GPIO.output(ElevadorPH, GPIO.HIGH)
     GPIO.output(ReductorPH, GPIO.HIGH)
     GPIO.output(BombaAgua, GPIO.HIGH)
+    GPIO.output(Mezclador1, GPIO.HIGH)
+    GPIO.output(Rele7, GPIO.HIGH)
     return inicio
     
 def read_temp():
@@ -285,6 +290,8 @@ def control_bombas(PH,EC,numero_semanas,errorPH,errorEC,reporte):
             VolumenAgua = parameter["Parametros_EC"][1]["VolumenAgua"]*funcEC(x)*parameter["Parametros_EC"][1]["BombaAgua"]
         elif float(EC) <EC_min and errorEC == False :
             x = EC_min - float(EC) 
+	    GPIO.output(Mezclador1, GPIO.LOW)
+    	    time.sleep(10)
             GPIO.output(Nutriente1, GPIO.LOW)
             print("Bomba de Nutriente1 activada")
             tiempo1 = parameter["Parametros_EC"][1]["BombaNutriente1"]*funcEC(x)
@@ -295,6 +302,7 @@ def control_bombas(PH,EC,numero_semanas,errorPH,errorEC,reporte):
             time.sleep(tiempo2)
             GPIO.output(Nutriente1, GPIO.HIGH)
             GPIO.output(Nutriente2, GPIO.HIGH)
+	    GPIO.output(Mezclador1, GPIO.HIGH)
             print("Bombas de Nutrientes desactivada")
             reporte += ", Bomba de agua Nutriente 1 activada: "+str(tiempo1)+" segundos"
             reporte += ", Bomba de agua Nutriente 2 activada: "+str(tiempo2)+" segundos"
@@ -303,7 +311,8 @@ def control_bombas(PH,EC,numero_semanas,errorPH,errorEC,reporte):
             GPIO.output(Nutriente1, GPIO.HIGH)
             GPIO.output(Nutriente2, GPIO.HIGH)
             GPIO.output(BombaAgua, GPIO.HIGH)
-            GPIO.output(ValvulaAgua, GPIO.HIGH)    
+            GPIO.output(ValvulaAgua, GPIO.HIGH)   
+	    GPIO.output(Mezclador1, GPIO.HIGH)
     
     if float(PH) >parameter["Parametros_PH"]["Rango_PH"][1] and errorPH == False:
         x = float(PH) - parameter["Parametros_PH"]["Rango_PH"][1]
