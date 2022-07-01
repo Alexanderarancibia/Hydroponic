@@ -5,4 +5,5 @@ sudo chmod 664 /lib/systemd/system/co2.service
 sudo systemctl daemon-reload
 sudo systemctl enable hydro.service
 sudo pip3 install -r requirements.txt
+sudo cat ../CrontabSetup/crontab.txt  |sudo crontab -
 sudo reboot
