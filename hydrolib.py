@@ -51,7 +51,7 @@ f = open('/home/pi/Documents/Hydroponic/parametros.json')
 parameter = json.load(f)
 
 def setup():
-    inicio = datetime(parameter["FechaInicio"]["Año"], parameter["FechaInicio"]["Mes"], parameter["FechaInicio"]["Dia"], 0, 0, 0)
+    inicio = datetime(parameter["FechaInicio"]["Anio"], parameter["FechaInicio"]["Mes"], parameter["FechaInicio"]["Dia"], 0, 0, 0)
     VolumenAgua = 0
      
     GPIO.output(Nutriente1, GPIO.HIGH)
