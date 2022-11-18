@@ -1,0 +1,37 @@
+{
+	"Modulo": "Modulo3",
+	"DataRefresh": 300,
+	"Parametros_EC":
+		[
+			{ 
+				"Semana1_EC": [1700,1900],
+				"Semana2_EC": [1700,1900],
+				"Semana3_EC": [1700,1900],
+				"Semana4_EC": [1700,1900],
+				"Semana5_EC": [1700,1900],
+				"Semana6_EC": [1700,1900]
+			},
+			{ 
+				"BombaNutriente1": 33,
+				"BombaNutriente2": 18,
+				"BombaAgua": 30,
+				"VolumenAgua": 90
+			}
+
+		],
+
+	"Parametros_PH":
+		{ 	"Rango_PH": [5.6,6.3],
+			"BombaElevador": 3.2,
+			"BombaReductor": 3.2
+
+		},
+
+	"FechaInicio":
+		{
+			"Anio": 2022,
+			"Mes": 5,
+			"Dia": 1
+		}
+
+}
