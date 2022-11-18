@@ -1,0 +1,14 @@
+[Unit]
+Description=Start Clock
+
+[Service]
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/pi/.Xauthority
+ExecStart=/bin/bash -c 'sudo /usr/bin/python3 /home/pi/Documents/Hydroponic/Module.py > /home/pi/Documents/Hydroponic/hydro.log 2>&1'
+Restart=always
+RestartSec=10s
+KillMode=process
+TimeoutSec=infinity
+
+[Install]
+WantedBy=graphical.target
