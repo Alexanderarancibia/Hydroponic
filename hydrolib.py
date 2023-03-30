@@ -26,121 +26,49 @@ import json
 
 import time
 import subprocess
-import digitalio
 import board
-from PIL import Image, ImageDraw, ImageFont
-from adafruit_rgb_display import st7789
-cs_pin = digitalio.DigitalInOut(board.CE0)
-dc_pin = digitalio.DigitalInOut(board.D25)
-reset_pin = None
-BAUDRATE = 64000000
-spi = board.SPI()
-disp = st7789.ST7789(
-    spi,
-    cs=cs_pin,
-    dc=dc_pin,
-    rst=reset_pin,
-    baudrate=BAUDRATE,
-    width=240,
-    height=240,
-    x_offset=0,
-    y_offset=80,
-)
-height = disp.width  # we swap height/width to rotate it to landscape!
-width = disp.height
-image = Image.new("RGB", (width, height))
-rotation = 180
-draw = ImageDraw.Draw(image)
-draw.rectangle((0, 0, width, height), outline=0, fill=(0, 0, 0))
-disp.image(image, rotation)
-padding = -2
-top = padding
-bottom = height - padding
-x = 0
-font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24)
-backlight = digitalio.DigitalInOut(board.D22)
-backlight.switch_to_output()
-backlight.value = True
-
-VolumenAgua = 0
-
-Nutriente1 = digitalio.DigitalInOut(board.D12)
-Nutriente1.switch_to_output()
-Nutriente2=digitalio.DigitalInOut(board.D6)
-Nutriente2.switch_to_output()
-ReductorPH= digitalio.DigitalInOut(board.D13)
-ReductorPH.switch_to_output()
-ElevadorPH=digitalio.DigitalInOut(board.D21)
-ElevadorPH.switch_to_output()
-ValvulaAgua = digitalio.DigitalInOut(board.D20)
-ValvulaAgua.switch_to_output()
-Mezclador1 = digitalio.DigitalInOut(board.D16)
-Mezclador1.switch_to_output()
-Rele7 = digitalio.DigitalInOut(board.D26)
-Rele7.switch_to_output()
-BombaAgua = digitalio.DigitalInOut(board.D19)
-BombaAgua.switch_to_output()
-buttonA = digitalio.DigitalInOut(board.D23)
-buttonA.switch_to_input()
-buttonB = digitalio.DigitalInOut(board.D24)
-buttonB.switch_to_input()
-NivelBajo = digitalio.DigitalInOut(board.D18)
-NivelBajo.switch_to_input()
-SensorNivel= digitalio.DigitalInOut(board.D7)
-SensorNivel.switch_to_input()
-
-
-def data_display():
-    # Draw a black filled box to clear the image.
-    draw.rectangle((0, 0, width, height), outline=0, fill=0)
-
-    # Shell scripts for system monitoring from here:
-    # https://unix.stackexchange.com/questions/119126/command-to-display-memory-usage-disk-usage-and-cpu-load
-    cmd = "hostname -I | cut -d' ' -f1"
-    IP = "IP: " + subprocess.check_output(cmd, shell=True).decode("utf-8")
-    with open('reporte.txt') as f:
-        report = f.readlines()
-    report = json.loads(report[0])
- 
-    y = top
-    draw.text((x, y), IP, font=font, fill="#FFFFFF")
-    y += font.getsize(IP)[1]
-    draw.text((x, y),str(report['@timestamp'][2:]), font=font, fill="#FF0FFF")
-    y += font.getsize(str(report['@timestamp']))[1]
-    draw.text((x, y), "PH: " + str(report['PH']), font=font, fill="#0000FF")
-    y += font.getsize("PH: " + str(report['PH']))[1]
-    draw.text((x, y), "EC: " + str(report['EC']), font=font, fill="#0000FF")
-    y += font.getsize(IP)[1]
-    draw.text((x, y), "TAgua: " + str(report['TAgua']), font=font, fill="#0000FF")
-    y += font.getsize(IP)[1]
-    draw.text((x, y), "Modulo: " + str(report['Modulo']), font=font, fill="#00FF00")
-    y += font.getsize(IP)[1]
-    reporte = "Reporte :"+report['Reporte']
- 
-    n = 19  
-    for i in range(0, len(reporte), n): 
-        draw.text((x, y),reporte[i:i+n], font=font, fill="#FFFFFF")
-        y += font.getsize(IP)[1]
-        
-    # Display image.
-    disp.image(image, rotation)
-
+import RPi.GPIO as GPIO
+Nutriente1 = 18 #! 21
+Nutriente2= 12 #! 6
+ReductorPH= 16
+ElevadorPH= 20 #! 26
+ValvulaAgua = 21 #! 19
+Mezclador1 = 13
+Rele7 = 6 #! 12
+SensorNivel= 26 #! 1
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False) 
+GPIO.setup(Nutriente1, GPIO.OUT)
+GPIO.setup(Nutriente2, GPIO.OUT)
+GPIO.setup(ReductorPH, GPIO.OUT)
+GPIO.setup(ElevadorPH, GPIO.OUT)
+GPIO.setup(ValvulaAgua, GPIO.OUT)
+GPIO.setup(Mezclador1, GPIO.OUT)
+GPIO.setup(Rele7, GPIO.OUT)
+GPIO.setup(SensorNivel, GPIO.IN)
 
 f = open('/home/pi/Documents/Hydroponic/parametros.json')
 parameter = json.load(f)
 
+#def apagarbomba(channel):
+    #codigo para interrupcion
+       
+    
 def setup():
     inicio = datetime(parameter["FechaInicio"]["Anio"], parameter["FechaInicio"]["Mes"], parameter["FechaInicio"]["Dia"], 0, 0, 0)
-    VolumenAgua = 0
-    Nutriente1.value = True
-    Nutriente2.value = True
-    ValvulaAgua.value = True
-    ElevadorPH.value = True
-    ReductorPH.value = True
-    BombaAgua.value = True
-    Mezclador1.value = True
-    Rele7.value = True
-   
+    GPIO.output(Nutriente1, GPIO.LOW)
+    GPIO.output(Nutriente2, GPIO.LOW)
+    GPIO.output(ReductorPH, GPIO.LOW)
+    GPIO.output(ElevadorPH, GPIO.LOW)
+    GPIO.output(ValvulaAgua, GPIO.LOW)
+    GPIO.output(Mezclador1, GPIO.LOW)
+    GPIO.output(Rele7, GPIO.LOW)
+
+    #EncenderBomba = 24
+    #GPIO.setup(EncenderBomba, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    #GPIO.add_event_detect(EncenderBomba, GPIO.FALLING, 
+    #        callback=apagarbomba, bouncetime=100)
+    
     return inicio
     
 def read_temp():
@@ -256,7 +184,7 @@ def PH_EC(device_list,reporte ,T=25):
     errorEC = False
     
     if len(device_list) == 0:
-        PH , EC = 7,16000
+        PH , EC = 7,1600
     else:
         device = device_list[0]
         #PH, EC,CO2 =read("ALL:RT,"+str(T),device,device_list)
@@ -272,10 +200,10 @@ def PH_EC(device_list,reporte ,T=25):
         
     except:
         errorEC = True
-        EC = 16000
+        EC = 1600
         reporte += ", Fallo Sensor EC"
        
-    return float(PH), float(EC)/10, errorPH, errorEC,reporte 
+    return float(PH), float(EC), errorPH, errorEC,reporte 
 
 def tiempo():
     #año mes dia
@@ -292,33 +220,7 @@ def dias_semanas(now1,inicio):
 
 def modulo():
     return parameter["Modulo"]
-def nivel_bajo(reporte):
-    VolumenAgua = 0
-    cont = 0
-    if GPIO.input(Nivelbajo):
-        reporte += ", Nivel bajo de agua, "
-        for i in range(10):
-            if SensorNivel.value == True:
-                print("NIVEL DE AGUA BAJO!!!") 
-                BombaAgua.value = False
-                ValvulaAgua.value = False
-                VolumenAgua = VolumenAgua + 1000
-                cont = cont + 1
-                time.sleep(20)
-                estado = ""
-            else:
-                print("Nivel de agua normal") 
-                BombaAgua.value = True
-                ValvulaAgua.value = True
-                estado = "(Nivel Maximo)"
-                break
-            reporte += "Bomba de agua prendida"+str(cont*20)+"segundos, "+estado
-
-        BombaAgua.value = True
-        ValvulaAgua.value = True
-        
     
-    return VolumenAgua,reporte
 def funcPH(x):
     return max((2*x/pow((1+4*pow(x,2)),0.5)),0.4)
 
@@ -334,7 +236,7 @@ def control_bombas(PH,EC,numero_semanas,errorPH,errorEC,reporte):
         EC_min = parameter["Parametros_EC"][0]["Semana1_EC"][0]
         EC_max = parameter["Parametros_EC"][0]["Semana1_EC"][1]
     elif 1 <= numero_semanas<2:
-        EC_min = parameter["Parametros_EC"][0]["Semana1_EC"][0]
+        EC_min = parameter["Parametros_EC"][0]["Semana2_EC"][0]
         EC_max = parameter["Parametros_EC"][0]["Semana2_EC"][1]
     elif 2 <=  numero_semanas<3:
         EC_min = parameter["Parametros_EC"][0]["Semana3_EC"][0]
@@ -351,80 +253,73 @@ def control_bombas(PH,EC,numero_semanas,errorPH,errorEC,reporte):
         EC_max = parameter["Parametros_EC"][0]["Semana6_EC"][1]
     print("EC min : ", EC_min)
     print("EC max : ", EC_max)
-     
-    VolumenAgua = 0
-    if SensorNivel.value == False:
+
+    if GPIO.input(SensorNivel) == False:
+    #if True == False:
         reporte += ", Nivel elevado de Agua"
         
         print("Nivel elevado de agua")
     else:
-        print("Nivel Normal de agua")
         if float(EC) >EC_max and errorEC == False :
-            x = float(EC) - EC_max
-            print("Bomba de Agua activada")
-            BombaAgua.value = False
-            ValvulaAgua.value = False
-            tiempo = round(parameter["Parametros_EC"][1]["BombaAgua"]*funcEC(x),2)
-            time.sleep(tiempo)
-            reporte += ", Bomba de agua activada: "+str(tiempo)+" segundos"
-            BombaAgua.value = True
-            ValvulaAgua.value = True
-            print("Bomba de Agua desactivada")
-            VolumenAgua = parameter["Parametros_EC"][1]["VolumenAgua"]*funcEC(x)*parameter["Parametros_EC"][1]["BombaAgua"]
+            pass
         elif float(EC) <EC_min and errorEC == False :
             x = EC_min - float(EC) 
-            GPIO.output(Mezclador1, GPIO.LOW)
-            Mezclador1.value = False
+            GPIO.output(Mezclador1, GPIO.HIGH)
             time.sleep(10)
-            Nutriente1.value = False
+            GPIO.output(Nutriente1, GPIO.HIGH)
             print("Bomba de Nutriente1 activada")
             tiempo1 = round(parameter["Parametros_EC"][1]["BombaNutriente1"]*funcEC(x),2)
             tiempo2 = round(parameter["Parametros_EC"][1]["BombaNutriente2"]*funcEC(x),2)
             time.sleep(tiempo1- tiempo2)
-            Nutriente2.value = False
+            GPIO.output(Nutriente2, GPIO.HIGH)
             print("Bomba de Nutriente2 activada")
             time.sleep(tiempo2)
-            Nutriente1.value = True
-            Nutriente2.value = True
-            Mezclador1.value = True
+            GPIO.output(Nutriente1, GPIO.LOW)
+            GPIO.output(Nutriente2, GPIO.LOW)
+            GPIO.output(Mezclador1, GPIO.LOW)
             print("Bombas de Nutrientes desactivada")
             reporte += ", Bomba de agua Nutriente 1 activada: "+str(tiempo1)+" segundos"
             reporte += ", Bomba de agua Nutriente 2 activada: "+str(tiempo2)+" segundos"
                 
         else:
-            Nutriente1.value = True
-            Nutriente2.value = True
-            Mezclador1.value = True
-            BombaAgua.value = True
-            ValvulaAgua.value = True
-         
+            GPIO.output(Nutriente1, GPIO.LOW)
+            GPIO.output(Nutriente2, GPIO.LOW)
+            GPIO.output(Mezclador1, GPIO.LOW)
+    GPIO.output(Nutriente1, GPIO.LOW)
+    GPIO.output(Nutriente2, GPIO.LOW)
+    GPIO.output(Mezclador1, GPIO.LOW)
+
     if float(PH) >parameter["Parametros_PH"]["Rango_PH"][1] and errorPH == False:
         x = float(PH) - parameter["Parametros_PH"]["Rango_PH"][1]
-        ReductorPH.value = False
+        GPIO.output(ReductorPH, GPIO.HIGH)
         print("Bomba Reductora activada")
         tiempo = round(parameter["Parametros_PH"]["BombaReductor"]*funcPH(x),2)
         time.sleep(tiempo)
         reporte += ", Bomba Reductora activada: "+str(tiempo)+" segundos"
-        ReductorPH.value = True
+        GPIO.output(ReductorPH, GPIO.LOW)
         print("Bomba Reductora desactivada")
    
     elif float(PH) < parameter["Parametros_PH"]["Rango_PH"][0] and errorPH == False:
         x = parameter["Parametros_PH"]["Rango_PH"][1] - float(PH)
-        ElevadorPH.value = False
+        GPIO.output(ElevadorPH, GPIO.HIGH)
         print("Bomba Elevadora de PH activada")
         tiempo = round(parameter["Parametros_PH"]["BombaElevador"]*funcPH(x),2)
         time.sleep(tiempo)
         reporte += ", Bomba Elevadora activada: "+str(tiempo)+" segundos"
-        ElevadorPH.value = True
+        GPIO.output(ElevadorPH, GPIO.LOW)
         print("Bomba Elevadora de PH desactivada")
     else:
-        ElevadorPH.value = True
-        ReductorPH.value = True
-    return VolumenAgua,reporte
+        GPIO.output(ReductorPH, GPIO.LOW)
+        GPIO.output(ElevadorPH, GPIO.LOW)
+    GPIO.output(Nutriente1, GPIO.LOW)
+    GPIO.output(Nutriente2, GPIO.LOW)
+    GPIO.output(Mezclador1, GPIO.LOW)
+    GPIO.output(Rele7, GPIO.LOW)
+    GPIO.output(ReductorPH, GPIO.LOW)
+    GPIO.output(ElevadorPH, GPIO.LOW)
+    return reporte
 
 def reset():
     f = open('/home/pi/Documents/Hydroponic/parametros.json')
     parameter = json.load(f)
     f.close()
-
-
