@@ -1,24 +1,12 @@
 #!/usr/bin/python3
 import hydrolib as hy
-import time
-import copy
-import re
-import requests
-import json
-import string
-import os, glob, time, sys
-import io
-from datetime import datetime,date, timedelta
-import Adafruit_ADS1x15  
-from pytz import timezone
-import sys
 import sendtoaws as aws
-# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
-# SPDX-License-Identifier: MIT
+import time
 
-# connect the client.
  
 def main():
+    aws.subscribe("prueba",1)
+    
     contbomba = 0
     print("INICIO DEL PROGRAMA")
     inicio = hy.setup()  #Inicializacion de las Salidas Digitales
@@ -35,11 +23,18 @@ def main():
             reporte= ""
             T1,T2= hy.read_temp()
             PH, EC, errorPH,errorEC,reporte = hy.PH_EC(device_list,reporte,T1)
-            if contbomba == 0:
-                VolumenAgua,reporte = hy.control_bombas(PH,EC,numero_semanas,errorPH,errorEC,reporte)
-                contbomba = contbomba + 1
+            contbomba = contbomba + 1 
+            if contbomba == 1:
+                print("Control de Bombas")
+                reporte = hy.control_bombas(PH,EC,numero_semanas,errorPH,errorEC,reporte)
+                    
+                print("Contador:  "+str(contbomba))
+ 
             elif contbomba == 5:
                 contbomba = 0
+                VolumenAgua = 0
+                print("Reset Contador: "+str(contbomba))
+               
             msg = aws.message()
             msg.addData("PH",PH)
             msg.addData("EC",EC)
@@ -47,17 +42,19 @@ def main():
             msg.addData("@timestamp",now)
             msg.addData("DiasTranscurridos",numero_dias)
             msg.addData("Modulo",modulo)
-            msg.addData("VolumenAgua",VolumenAgua)
             msg.addData("Reporte",reporte[2:])
             msg.endData()
-            aws.publish("raspberry/modulo3",msg.payload,0)
+            try:
+                aws.publish("raspberry/tanque2",msg.payload,0)
+
+            except:
+                pass
             
             with open("reporte.txt", "w") as f:
                 f.write(msg.payload)
-            hy.data_display()
             print(msg.payload)
             
-            time.sleep(240)
+            time.sleep(10)
             hy.reset()
             
 
@@ -71,4 +68,5 @@ def main():
                     
 if __name__ == '__main__':
     main()
+
 
